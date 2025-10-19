@@ -271,3 +271,99 @@ int main() {
         cout << "Error: Could not load names from file." << endl;
         return 1;
     }
+
+    DoublyLinkedList coffeeLine;
+    vector<string> usedNames;  // Track names already in use
+
+    // Lambda to get a random unused name
+    auto getRandomName = [&]() -> string {
+        if (usedNames.size() >= names.size()) {
+            // All names used, start reusing
+            usedNames.clear();
+        }
+        string selectedName;
+        do {
+            selectedName = names[rand() % names.size()];
+        } while (find(usedNames.begin(), usedNames.end(), selectedName) != usedNames.end());
+        usedNames.push_back(selectedName);
+        return selectedName;
+    };
+
+    // Store opens - add 5 customers
+    cout << "Store opens:" << endl;
+    for (int i = 0; i < 5; i++) {
+        string customer = getRandomName();
+        coffeeLine.push_back(customer);
+        cout << "    " << customer << " joins the line" << endl;
+    }
+    
+    cout << "    Resulting line:" << endl;
+    if (!coffeeLine.isEmpty()) {
+        coffeeLine.printLine();
+    } else {
+        cout << "        (empty)" << endl;
+    }
+    cout << endl;
+
+    // Simulate 19 more time periods (total 20 including opening)
+    for (int timeStep = 2; timeStep <= 20; timeStep++) {
+        cout << "Time step #" << timeStep << ":" << endl;
+        
+        // 40% probability: Customer at front is served
+        int prob = rand() % 100 + 1;
+        if (prob <= 40 && !coffeeLine.isEmpty()) {
+            string customer = coffeeLine.getFront();
+            coffeeLine.pop_front();
+            cout << "    " << customer << " is served" << endl;
+            // Remove from used names
+            usedNames.erase(remove(usedNames.begin(), usedNames.end(), customer), usedNames.end());
+        }
+        
+        // 10% probability: Random customer in line leaves
+        prob = rand() % 100 + 1;
+        if (prob <= 10 && !coffeeLine.isEmpty() && coffeeLine.size() > 1) {
+            string customer = coffeeLine.getRandomElement();
+            if (customer != coffeeLine.getFront() && customer != coffeeLine.getBack()) {
+                coffeeLine.delete_val(customer);
+                cout << "    " << customer << " left the line" << endl;
+                usedNames.erase(remove(usedNames.begin(), usedNames.end(), customer), usedNames.end());
+            }
+        }
+        
+        // 10% probability: VIP joins front of line
+        prob = rand() % 100 + 1;
+        if (prob <= 10) {
+            string customer = getRandomName();
+            coffeeLine.push_front(customer);
+            cout << "    " << customer << " (VIP) joins the front of the line" << endl;
+        }
+        
+        // 60% probability: New customer joins the end
+        prob = rand() % 100 + 1;
+        if (prob <= 60) {
+            string customer = getRandomName();
+            coffeeLine.push_back(customer);
+            cout << "    " << customer << " joins the line" << endl;
+        }
+        
+        // 20% probability: Customer at end leaves (frustrated)
+        prob = rand() % 100 + 1;
+        if (prob <= 20 && !coffeeLine.isEmpty()) {
+            string customer = coffeeLine.getBack();
+            coffeeLine.pop_back();
+            cout << "    " << customer << " (at the rear) left the line" << endl;
+            usedNames.erase(remove(usedNames.begin(), usedNames.end(), customer), usedNames.end());
+        }
+        
+        // Display resulting line
+        cout << "    Resulting line:" << endl;
+        if (coffeeLine.isEmpty()) {
+            cout << "        (empty)" << endl;
+        } else {
+            coffeeLine.printLine();
+        }
+        cout << endl;
+    }
+    
+    return 0;
+}
